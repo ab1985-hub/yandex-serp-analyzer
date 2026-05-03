@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+.env
+.pythonlibs/
+client/node_modules/
+client/dist/
+.local/

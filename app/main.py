@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from app.api.analyze import router as analyze_router
 from app.utils.logger import setup_logging
@@ -29,3 +34,15 @@ def health() -> dict[str, str]:
 
 
 app.include_router(analyze_router)
+
+# ── Serve built React frontend (production) ───────────────────────────────────
+_STATIC_DIR = Path(__file__).parent.parent / "client" / "dist"
+
+if _STATIC_DIR.is_dir():
+    app.mount("/assets", StaticFiles(directory=str(_STATIC_DIR / "assets")), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str) -> FileResponse:
+        """Serve index.html for all non-API routes (SPA client-side routing)."""
+        index = _STATIC_DIR / "index.html"
+        return FileResponse(str(index))
